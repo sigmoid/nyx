@@ -1,0 +1,19 @@
+// prints the first 100 numbers in the fibonnaci sequence.
+main
+{
+    int start := 1;
+    int next := 1;
+    int counter := 0;
+
+    while(counter < 100)
+    {
+        int tmp := start + next;
+
+        print(tmp);
+
+        start := next;
+        next := tmp;
+
+        counter := counter + 1;
+    }
+}

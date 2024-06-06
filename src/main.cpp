@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include "argument_parser.h"
 #include "logger.h"
+#include "parser.h"
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -44,6 +45,12 @@ int main(int argc, char **argv) {
 
     if(shouldDumpTokens)
         Logger::LogTokens(tokens, std::cout);
+
+    Parser parser(tokens);
+
+    std::cout << "Parsing..." << std::endl;
+
+    parser.Parse();
 
     return 0;
 }

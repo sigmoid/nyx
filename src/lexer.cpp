@@ -13,18 +13,13 @@ char LexIdentifier(std::string line, int lineNum, int& i)
         innerText += line[i];
 		++i;
     }
-
-    if(!std::iswspace(line[i]) && !line[i] == '\0')
-    {
-        std::cerr << "Error parsing identifier: line: " + std::to_string(lineNum) + " col: " + std::to_string(i);
-    }
 	
 	if (innerText == "const")
 		return TOK_CONST;
 	else if (innerText == "var")
 		return TOK_VAR;
-	else if (innerText == "procedure")
-		return TOK_PROCEDURE;
+	else if (innerText == "void")
+		return TOK_VOID;
 	else if (innerText == "call")
 		return TOK_CALL;
 	else if (innerText == "begin")
@@ -41,7 +36,9 @@ char LexIdentifier(std::string line, int lineNum, int& i)
 		return TOK_DO;
 	else if (innerText == "odd")
 		return TOK_ODD;
-
+    else if(innerText == "main")
+        return TOK_MAIN;
+        
 	return TOK_IDENT;
 }
 
@@ -106,7 +103,7 @@ std::vector<char> Lexer::LexInput(std::ifstream& fileStream)
             if(currentChar == '/')
             {
                 // comment
-                if(i+1 >= line.length() && line[i+1] != '/')
+                if(i+1 <= line.length() && line[i+1] == '/')
                 {
                     break;
                 }
@@ -130,18 +127,43 @@ std::vector<char> Lexer::LexInput(std::ifstream& fileStream)
                 i += 2;
                 currentToken = TOK_ASSIGN;
             }
+            else if(currentChar == '=')
+            {
+                if(i + 1 < line.length() && line[i+1] == '=')
+                    currentToken = TOK_DOUBLEEQUAL;
+                else
+                    currentToken = TOK_EQUAL;
+
+                i++;
+            }
+            else if(currentChar == '<')
+            {
+                if(i + 1 < line.length() && line[i+1] == '=')
+                    currentToken = TOK_LESSTHANEQ;
+                else
+                    currentToken = TOK_LESSTHAN;
+                i++;
+            }
+            else if(currentChar == '>')
+            {
+                if(i + 1 < line.length() && line[i+1] == '=')
+                    currentToken = TOK_GREATERTHANEQ;
+                else
+                    currentToken = TOK_GREATERTHAN;
+                
+                i++;
+            }
             else if(currentChar == '.' ||
-             currentChar == '=' ||
              currentChar == ',' ||
              currentChar == ';' ||
              currentChar == '#' ||
-             currentChar == '<' ||
-             currentChar == '>' ||
              currentChar == '+' ||
              currentChar == '-' ||
              currentChar == '*' ||
              currentChar == '(' ||
-             currentChar == ')')
+             currentChar == ')' ||
+             currentChar == '{' ||
+             currentChar == '}' )
             {
                 currentToken = currentChar;
                 i++;
