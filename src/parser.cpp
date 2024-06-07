@@ -1,8 +1,7 @@
 #include "parser.h"
 
-Parser::Parser(std::vector<char> tokens)
+Parser::Parser(std::vector<Token> tokens)
 {
-    std::cout << tokens.size() << tokens[0] << std::endl;
     _Tokens = tokens;
     _CurrentTokenItr = _Tokens.begin();
 }
@@ -15,54 +14,57 @@ void Parser::Parse()
 
 void Parser::Expect(char tokenType)
 {    
-    if(GetCurrentToken() != tokenType)
-        throw std::runtime_error("Invalid token: " + std::string(1,GetCurrentToken()) + " expected " + std::string(1,tokenType));
+    if(GetCurrentToken().Value != tokenType)
+        throw std::runtime_error("Invalid token: " + std::string(1,GetCurrentToken().Value) + " expected " + std::string(1,tokenType) + " Line: " + std::to_string(GetCurrentToken().LineNumber) + " Pos: " + std::to_string(GetCurrentToken().Position));
     
     Next();
 }
 void Parser::Next()
 {
-    if(_CurrentTokenItr + 1 >= _Tokens.end())
-        throw std::runtime_error("Attempted to read token past end of lexed code");
-    
     _CurrentTokenItr++;
 }
 
-char Parser::GetCurrentToken()
+Token Parser::GetCurrentToken()
 {
     if(_CurrentTokenItr != _Tokens.end())
+    {
         return *_CurrentTokenItr;
-
-    throw std::runtime_error("Attempt to access out of bounds object");
+    }
 }
 
 void Parser::Block()
 {
     Expect(TOK_LCURLY);
-    Statement();
-    Expect(TOK_RCURLY);   
+    while(GetCurrentToken().Value != TOK_RCURLY)
+    {
+        Statement();
+    }
+    Expect(TOK_RCURLY);  
 }
 
 void Parser::Statement()
 {
-    if(GetCurrentToken() == TOK_IDENT)
+    if(GetCurrentToken().Value == TOK_TYPE)
     {
-        Next();
-
-        if(GetCurrentToken() == TOK_ASSIGN)
+        Declare();
+    }
+    if(GetCurrentToken().Value == TOK_IDENT)
+    {
+        Expect(TOK_IDENT);
+        if(GetCurrentToken().Value == TOK_ASSIGN)
         {
             Assign();
         }
-        else if(GetCurrentToken() == TOK_LPAREN)
-        {
+        else if(GetCurrentToken().Value == TOK_LPAREN)
+        {        
             FunctionCall();
         }
     }
-    else if(GetCurrentToken() == TOK_IF)
+    else if(GetCurrentToken().Value == TOK_IF)
     {
         IfStatement();
     }
-    else if(GetCurrentToken() == TOK_WHILE)
+    else if(GetCurrentToken().Value == TOK_WHILE)
     {
         WhileLoop();
     }
@@ -75,12 +77,13 @@ void Parser::IfStatement()
     Expect(TOK_LPAREN);
     Condition();
     Expect(TOK_RPAREN);
+    Block();
 }
 
 void Parser::WhileLoop()
 {
     Expect(TOK_WHILE);
-    Expect(TOK_LCURLY);
+    Expect(TOK_LPAREN);
     Condition();
     Expect(TOK_RPAREN);
     Block();
@@ -88,29 +91,45 @@ void Parser::WhileLoop()
 
 void Parser::FunctionCall()
 {
-    Expect(TOK_IDENT);
     Expect(TOK_LPAREN);
     ParamList();
     Expect(TOK_RPAREN);
     Expect(TOK_SEMICOLON);
 }
 
+void Parser::Declare()
+{
+    Expect(TOK_TYPE);
+    Expect(TOK_IDENT);
+    Expect(TOK_ASSIGN);
+    Expression();
+    Expect(TOK_SEMICOLON);
+}
+
 void Parser::Assign()
 {
     Expect(TOK_ASSIGN);
-    Expression();
+    if(GetCurrentToken().Value == TOK_IDENT)
+    {
+        Expression();
+    }
+    else
+    {
+        Expression();
+    }
+    Expect(TOK_SEMICOLON);
 }
 
 void Parser::Expression()
 {
-    if(GetCurrentToken() == TOK_MINUS)
+    if(GetCurrentToken().Value == TOK_MINUS)
     {
         Next();
     }
 
     Term();
 
-    while(GetCurrentToken() == TOK_MINUS || GetCurrentToken() == TOK_PLUS)
+    while(GetCurrentToken().Value == TOK_MINUS || GetCurrentToken().Value == TOK_PLUS)
     {
         Next();
         Term();
@@ -121,23 +140,24 @@ void Parser::Condition()
 {
     Expression();
     
-    if(GetCurrentToken() == TOK_DOUBLEEQUAL
-        || GetCurrentToken() == TOK_GREATERTHANEQ
-        || GetCurrentToken() == TOK_LESSTHANEQ
-        || GetCurrentToken() == TOK_LESSTHAN
-        || GetCurrentToken() == TOK_GREATERTHAN)
+    if(GetCurrentToken().Value == TOK_DOUBLEEQUAL
+        || GetCurrentToken().Value == TOK_GREATERTHANEQ
+        || GetCurrentToken().Value == TOK_LESSTHANEQ
+        || GetCurrentToken().Value == TOK_LESSTHAN
+        || GetCurrentToken().Value == TOK_GREATERTHAN)
     {
         Next();
         Expression();
+        return;
     }
 
-    throw std::runtime_error("Expected a comparison operator, got " + std::string(1,GetCurrentToken()));
+    throw std::runtime_error("Expected a comparison operator, got " + std::string(1,GetCurrentToken().Value) + " Line: " + std::to_string(GetCurrentToken().LineNumber) + " Pos " + std::to_string(GetCurrentToken().Position));
 }
 
 void Parser::ParamList()
 {
     Expect(TOK_IDENT);
-    while(GetCurrentToken() == TOK_COMMA)
+    while(GetCurrentToken().Value == TOK_COMMA)
     {
         Expect(TOK_IDENT);
     }
@@ -147,8 +167,8 @@ void Parser::Term()
 {
     Factor();
 
-    while(GetCurrentToken() == TOK_MULTIPLY 
-    || GetCurrentToken() == TOK_DIVIDE)
+    while(GetCurrentToken().Value == TOK_MULTIPLY 
+    || GetCurrentToken().Value == TOK_DIVIDE)
     {
         Next();
         Factor();
@@ -157,12 +177,12 @@ void Parser::Term()
 
 void Parser::Factor()
 {
-    if(GetCurrentToken() == TOK_IDENT
-    || GetCurrentToken() == TOK_NUMBER)
+    if(GetCurrentToken().Value == TOK_IDENT
+    || GetCurrentToken().Value == TOK_NUMBER)
     {
         Next();
     }
-    else if(GetCurrentToken() == TOK_LPAREN)
+    else if(GetCurrentToken().Value == TOK_LPAREN)
     {
         Expect(TOK_LPAREN);
         Expression();

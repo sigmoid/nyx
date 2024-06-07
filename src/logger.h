@@ -4,5 +4,5 @@
 
 class Logger{
     public:
-        static void LogTokens(std::vector<char>& tokens, std::ostream& output);
+        static void LogTokens(std::vector<Token>& tokens, std::ostream& output);
 };

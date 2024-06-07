@@ -1,6 +1,7 @@
 program	= "main" block.
 block	= "{" {statement} "}"
-statement	= [ ident ":=" expression
+statement	= [ type ident ":=" expression
+		| ident ":=" expression
  		| ident"("param_list")"
  		| "if (" condition + ")" block
  		| "while" "(" condition ")" block ] .

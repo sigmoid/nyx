@@ -8,13 +8,13 @@ class Parser
 {
 
 public:
-    Parser(std::vector<char> tokens);
+    Parser(std::vector<Token> tokens);
     void Parse();
 
 private:
     void Expect(char tokenType);
     void Next();
-    char GetCurrentToken();
+    Token GetCurrentToken();
 
     // Grammar Rules
     void Block();
@@ -22,6 +22,7 @@ private:
     void IfStatement();
     void WhileLoop();
     void FunctionCall();
+    void Declare();
     void Assign();
     void Expression();
     void Condition();
@@ -29,7 +30,7 @@ private:
     void Term();
     void Factor();
 
-    std::vector<char>::iterator _CurrentTokenItr;
-    std::vector<char> _Tokens;
+    std::vector<Token>::iterator _CurrentTokenItr;
+    std::vector<Token> _Tokens;
 
 };

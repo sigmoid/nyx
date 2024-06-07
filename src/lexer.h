@@ -37,8 +37,16 @@
 #define TOK_LCURLY         '{'
 #define TOK_RCURLY         '}'
 #define TOK_MAIN           'M'
+#define TOK_TYPE           't'
+
+class Token {
+    public:
+    char Value;
+    int LineNumber;
+    int Position;
+};
 
 class Lexer{
     public:
-        std::vector<char> LexInput(std::ifstream& fileStream);
+        std::vector<Token> LexInput(std::ifstream& fileStream);
 };

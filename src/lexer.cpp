@@ -38,6 +38,8 @@ char LexIdentifier(std::string line, int lineNum, int& i)
 		return TOK_ODD;
     else if(innerText == "main")
         return TOK_MAIN;
+    else if(innerText == "int")
+        return TOK_TYPE;
         
 	return TOK_IDENT;
 }
@@ -82,9 +84,9 @@ char LexNumber(std::string line, int lineNum, int& i)
     return TOK_NUMBER;
 }
 
-std::vector<char> Lexer::LexInput(std::ifstream& fileStream)
+std::vector<Token> Lexer::LexInput(std::ifstream& fileStream)
 {
-    std::vector<char> res;
+    std::vector<Token> res;
 
     int lineNum = 0;
     std::string line;
@@ -92,7 +94,7 @@ std::vector<char> Lexer::LexInput(std::ifstream& fileStream)
         int i = 0;
         while(i < line.length())
         {
-            char currentToken;
+            char currentTokenVal;
             char currentChar = line[i];
 
             if(currentChar == ' ' || currentChar == '\n' || currentChar == '\t')
@@ -109,15 +111,15 @@ std::vector<char> Lexer::LexInput(std::ifstream& fileStream)
                 }
                 
                 i++;
-                currentToken = currentChar;
+                currentTokenVal = currentChar;
             }
             else if(std::isalpha(currentChar) || currentChar == '_')
             {
-                currentToken = LexIdentifier(line, lineNum, i);
+                currentTokenVal = LexIdentifier(line, lineNum, i);
             }
             else if(std::isdigit(currentChar))
             {
-                currentToken = LexNumber(line, lineNum, i);
+                currentTokenVal = LexNumber(line, lineNum, i);
             }
             else if(currentChar == ':')
             {
@@ -125,31 +127,31 @@ std::vector<char> Lexer::LexInput(std::ifstream& fileStream)
                     throw std::runtime_error("Invalid assignment operator");
                 
                 i += 2;
-                currentToken = TOK_ASSIGN;
+                currentTokenVal = TOK_ASSIGN;
             }
             else if(currentChar == '=')
             {
                 if(i + 1 < line.length() && line[i+1] == '=')
-                    currentToken = TOK_DOUBLEEQUAL;
+                    currentTokenVal = TOK_DOUBLEEQUAL;
                 else
-                    currentToken = TOK_EQUAL;
+                    currentTokenVal = TOK_EQUAL;
 
                 i++;
             }
             else if(currentChar == '<')
             {
                 if(i + 1 < line.length() && line[i+1] == '=')
-                    currentToken = TOK_LESSTHANEQ;
+                    currentTokenVal = TOK_LESSTHANEQ;
                 else
-                    currentToken = TOK_LESSTHAN;
+                    currentTokenVal = TOK_LESSTHAN;
                 i++;
             }
             else if(currentChar == '>')
             {
                 if(i + 1 < line.length() && line[i+1] == '=')
-                    currentToken = TOK_GREATERTHANEQ;
+                    currentTokenVal = TOK_GREATERTHANEQ;
                 else
-                    currentToken = TOK_GREATERTHAN;
+                    currentTokenVal = TOK_GREATERTHAN;
                 
                 i++;
             }
@@ -165,7 +167,7 @@ std::vector<char> Lexer::LexInput(std::ifstream& fileStream)
              currentChar == '{' ||
              currentChar == '}' )
             {
-                currentToken = currentChar;
+                currentTokenVal = currentChar;
                 i++;
             }
             else
@@ -173,6 +175,10 @@ std::vector<char> Lexer::LexInput(std::ifstream& fileStream)
                 throw std::runtime_error("Unrecognized Token \"" + std::string(1, currentChar) + "\"");
             }
 
+            Token currentToken;
+            currentToken.Value = currentTokenVal;
+            currentToken.LineNumber = lineNum + 1;
+            currentToken.Position = i;
             res.push_back(currentToken);
         }
         lineNum++;
